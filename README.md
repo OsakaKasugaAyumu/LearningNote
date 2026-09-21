@@ -20,8 +20,8 @@ Linux :
         -
 
 Zephyr :
-        -
-        -
+        - SYS_INIT(2026/09/20)
+        - ZBUS(2026/09/20 - )
 
 Memory Manager :
         -
