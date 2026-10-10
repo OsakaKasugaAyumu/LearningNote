@@ -12,11 +12,11 @@ TCP/IP NetStack :
         - 
 
 IMX6ULL :
-        -
+        - CAN Bus(2026/10/10)
         -
 
 Linux :
-        -
+        -       
         -
 
 Zephyr :
