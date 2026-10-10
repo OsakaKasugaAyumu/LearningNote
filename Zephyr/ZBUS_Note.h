@@ -58,3 +58,61 @@
  *       观察关系 : Channel和Observer
  *              - 对于每一个观察关系, 都会创建一个通道/观察者 pair配对
 */
+
+
+/**
+ *  
+ * 
+*/
+
+
+
+/**
+ * Precondition:
+ * 
+ * - ZBUS_OBSERVERS(...)
+ *      - __VA_ARGS__
+ * 
+ * 
+ *      @note ##__VA_ARGS__这个##的作用是当__VA_ARGS__为空时, 消除前面的逗号
+ * - ZBUS_MSG_INIT(_val, ...)
+ *      - {_val, ##__VA_ARGS__}   
+ * 
+ * 
+ * - _CONCAT(x, y)
+ *      - _DO_CONCAT(x, y)
+ *      - x ## y
+ * 
+ * 
+ * 
+ * - _ZBUS_MESSAGE_NAME(_name)
+ *      - _CONCAT(_zbus_message_, _name)
+ *      - _DO_CONCAT(_zbus_message_, _name)
+ *      - _zbus_message__name
+ * 
+ * 
+ * 
+ * - _ZBUS_CHAN_DEFINE(_name, _id, _type, _validator, _user_data)
+ *      - static struct zbus_channel_data _CONCAT(_zbus_chan_data_, _name) = {.observers_start_idx = -1, .observers_end_idx = -1};
+ *        const STRUCT_SECTION_ITERABLE(zbus_channel, _name) = {.message = &_zbus_message__name, .message_len = sizeof(_type), .user_data = _user_data, .validator = _validator, .data = &_CONCAT(_zbus_chan_data_, _name)}
+ * 
+ * 
+ * 
+ * - ZBUS_OBS_DECLARE(...)  
+ * 
+ * 
+ *  - ZBUS_CHAN_DEFINE(activity_state_data_chan, struct activity_state_event, NULL, NULL, ZBUS_OBSERVERS(watchface_activity_state_event), ZBUS_MSG_INIT());
+ *      - static struct activity_state_event _zbus_message_activity_state_data_chan = ZBUS_MSG_INIT();
+ *        _ZBUS_CHAN_DEFINE(activity_state_data_chan, 0xFFFFFFFF, struct activity_state_event, NULL, NULL);
+ *        ZBUS_OBS_DECLARE(ZBUS_OBSERVERS(watchface_activity_state_event));
+ *        FOR_EACH_FIXED_ARG_NONEMPTY_TERM(_ZBUS_CHAN_OBSERVATION, (;), activity_state_data_chan, watchface_activity_state_event)
+ * 
+ * 
+ *      - static struct activity_state_event _zbus_message_activity_state_data_chan = {};
+ *        static struct zbus_channel_data _zbus_chan_data_activity_state_data_chan = {.observers_start_idx = -1, .observers_end_idx = -1};
+ *        const STRUCT_SECTION_ITERABLE(zbus_channel, activity_state_data_chan) = {.message = &_zbus_message__name, .message_len = sizeof(_type), .user_data = _user_data, .validator = _validator, .data = &_CONCAT(_zbus_chan_data_, _name)}
+ *        ZBUS_OBS_DECLARE(watchface_activity_state_event);
+ *        
+ *        
+ * 
+*/
