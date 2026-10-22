@@ -22,6 +22,7 @@ Linux :
 Zephyr :
         - SYS_INIT(2026/09/20)
         - ZBUS(2026/09/20 - )
+        - Zephyr Thread(2026/10/22)
 
 Memory Manager :
         -
