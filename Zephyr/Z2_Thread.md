@@ -492,4 +492,75 @@ void setup_work_queue(void)
 }
 ~~~
 
+## ISR和Thread通信方式 : Semaphore, Events和work三种方式
+~~~
+~~~
+
+## 消息队列
+**用来传递固定大小的消息**
+~~~
+#include <zephyr/kernel.h>
+
+struct data_msg
+{
+    uint32_t timestamp;
+    uint16_t sensor_id;
+    uint16_t value;
+};
+
+K_MSGQ_DEFINE(my_msgq, sizeof(struct data_msg), 10, 4);
+
+void sender_thread(void *p1, void *p2, void *p3)
+{
+    struct data_msg msg;
+    uint32_t count = 0;
+
+    while(1)
+    {
+        msg.timestamp = k_uptime_get_32();
+        msg.sensor_id = 1;
+        msg.value = count++;
+
+        int ret = k_msgq_put(&my_msgq, &msg, K_NO_WAIT);
+        if(ret == 0)
+        {
+            printk("发送消息 : value = %d\n", msg.value);
+        }
+        else 
+        {
+            printk("消息队列已满\n");
+        }
+
+        k_sleep(K_MSEC(500));
+    }
+}
+
+
+void receiver_thread(void *p1, void *p2, void *p3)
+{
+    struct data_msg msg;
+
+    while(1)
+    {
+        k_msgq_get(&my_msgq, &msg, K_NO_WAIT);
+
+        printk("接收消息 : sensor = %d, value = %d, time = %u\n", msg.sensor_id, msg.value, msg.timestamp);
+
+        k_sleep(K_MSEC(100));
+    }
+}
+
+K_THREAD_DEFINE(sender, 1024, sender_thread, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(receiver, 1024, receiver_thread, NULL, NULL, NULL, 7, 0, 0);
+~~~
+
+**消息队列**
+**- 固定消息大小**
+**- FIFO顺序**
+**- 支持阻塞非阻塞**
+**- 可以在ISR中使用(K_NO_WATI)**
+
+
+
+
 
