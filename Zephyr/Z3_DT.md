@@ -58,43 +58,67 @@ node-name@unit-address
         - 如果节点没有reg, 那么@unit-address必须省略
 
 
-    /
-    model="fsl,mpc8572ds"
-    compatible="fsl,mpc8572ds"
-    #address-cells=<1>
-    #size-cells=<1>
+/ {
+    model="fsl,mpc8572ds";
+    compatible="fsl,mpc8572ds";
+    #address-cells=<1>;
+    #size-cells=<1>;
+    cpus {
+        #address-cells=<1>;
+        #size-cells=<0>;
+        cpu@0 {
+            device_type="cpu";
+            reg=<0>;
+            timebase-frequency=<825000000>;
+            clock-frequency=<825000000>;
+        };
+        cpu@1 {
+            device_type="cpu";
+            reg=<1>;
+            timebase-frequency=<825000000>;
+            clock-frequency=<825000000>;
+        };
+    };
+    memory@0 {
+        device_type="memory";
+        reg=<0 0x20000000>;
+    };
+    uart@fe001000 {
+        compatible="ns16550";
+        reg=<fe001000 0x100>;
+    };
+    chosen {
+        bootargs="root=/dev/sda2";
+    };
+    aliases {
+        serial0="/uart@fe001000";
+    };
+};
 
 
-    cpus
-    #address-cells=<1>
-    #size-cells=<0>
+ - 根节点与全局属性
+    / : 根节点, 没有父节点
+    model : 方便日志识别
+    compatible : 核心属性, Zephyr用它来匹配底层驱动
+    #address-cells和#size-cells : 地址解析规则, 其子节点中的reg属性地址占用1个cell, 长度占用1个cell
 
-    cpu@0
-    device_type="cpu"
-    reg=<0>
-    timebase-frequency=<825000000>
-    clock-frequency=<825000000>
+ - CPU容器
+    cpus : 容器节点, 容纳系统中所有CPU核心
+    #size-cells=<0> : CPU没有长度概念, 不需要大小字段
 
-    cpu@1
-    devcie_type="cpu"
-    reg=<1>
-    timebase-frequency=<825000000>
-    clock-frequency=<825000000>
+ - cpu@0/cpu@1
+    node-name@unit-address
+    device_type="cpu" : 表明是一个CPU设备
 
+ - memory@0
+    device_type="memory" : 标准规定, 描述RAM节点必须加这个属性, 操作系统根据识别内存
 
-    memory@0
-    device_type="memory"
-    reg=<0 0x20000000>
+ - chosen
+    特殊节点, 不对应任何硬件, 让Bootloader向OS传递运行时的环境参数
+    bootargs="root=/dev/sda2" : 告诉OS, 你的根文件系统位于/dev/sda2上
 
-    uart@fe001000
-    compatible="ns16550"
-    reg=<fe001000 0x100>
-
-    chosen
-    bootargs="root=/dev/sda2"
-
-    aliases
-    serial0="/uart@fe001000"
+ - aliases 
+    别名节点, 为设备树上特定节点起一个简短固定的名字
 ~~~
 
 **节点路径**
@@ -217,6 +241,12 @@ DT官方规范
 ~~~
 属性名 : ranges
 属性值 : <empty> / <child-bus-address parent-bus-address length>
+    核心作用 : 地址映射
+    地址映射 : reg + ranges
+    把child-bus-address映射到parent-bus-address地址上
+
+
+    CPU最终物理地址 = parent-bus-address + (reg - child-bus-address)
 
     soc {
         compatible = "simple-bus";
@@ -232,5 +262,53 @@ DT官方规范
             interrupt-parent = <&ipic>;
         };
     };
+~~~
+
+**device_type**
+~~~
+仅仅建议在CPU和memory节点中保留该属性
+~~~
+
+
+**Interrrupt Tree**
+~~~
+中断域 : 任何带有interrupt-controller属性且定义了#interrupt-cells节点, 都会新建一个独立的中断域
+
+Nexus : 既是一个中断域的根, 又是一个另外中断域的普通节点
+
+中断树的根 : 有interrupt-controller和#interrupt-cells, 没有interrupt-parent和interrupts
+~~~
+
+**interrupts, interrupt-parent, interrupt-extended**
+~~~
+interrupt-parent : (属性值 <phandle>)
+    - 连接中断源和interrupt-controller的指路明灯
+    - 中断树的层次结构可能和设备树不同, 使用interrupt-parent显式指定中断父节点
+    - phandle是设备树内部节点的唯一数字ID(源码表现 &标签 ) 
+    - interrupt-parent=<&intc>本质就是指针引用
+    - 如果缺少该属性, 那么就找其设备树父节点的interrupt-parent, 一直往上找, 直到找到最近的一个interrupt-parent
+
+interrupts-extended : (属性值 <phandle> <prop-encoded-array>)
+    - 一个设备的输出中断连接到多个中断控制器上
+    - 普通的interrupts只能配合唯一的interrupt-parent使用
+    - interrupt-extended允许把父节点的phandle写入中断数组中, 从而精确的控制每一个中断走那条线
+    - interrupt-extended=<&pic 0xA 8>, <&gic 0xda>;
+~~~
+
+**interrupt-controller, #interrupt-cells**
+~~~
+interrupt-controller : (属性值 <empty>)
+    - 表明这是一个能接收中断信号的控制器
+    - 如果顺着interrupt-parent一直网上找, 遇到interrupt-controller且没有interrupt-parent, 那么就是最终的中断树根了 (ARM GIC, RISC PLIC)
+    - 如果一个节点既有interrupt-controller又有interrupt-parent, 那么说明是Nexus
+
+#interrupt-cells : (属性值 <u32>)
+    - 解码规则, 描述一个中断需要填几个cell
+    - 任何interrupt-parent指向这个控制器的设备, 在写interrupts的时候, 必须是#interrupt-cells的整数倍
+~~~
+
+**interrupt nexus, interrupt-map, interrupt-map-mask**
+~~~
+interrupt-map : (属性值 5元组)
 ~~~
 
