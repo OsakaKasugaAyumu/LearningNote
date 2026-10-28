@@ -78,6 +78,13 @@ C Marco :
     };
 };
 
+compatible描述的是硬件是什么, 而不是要干什么
+官方原话：不要只为想换一个软件 API 就修改 compatible。
+实战举例：假设 STM32G4 内部有一个通用定时器 TIM2。你用它可以输出 PWM，也可以用它做内部计数器。它的硬件寄存器是一模一样的。
+正确写法：你在 DTS 里定义它时，compatible 应该永远是 "st,stm32-timer"。
+错误写法：绝对不能因为你要用 PWM，就把它改成 "st,stm32-pwm"；要用计数，又改成 "st,stm32-counter"。如果硬件本身的寄存器结构一样，compatible 就应该保持一致，软件层面的用途切换由驱动内部或者 chosen 节点去处理。
+
+
 
 compatible = "simple-bus"  一个简单的内存映射总线
 
