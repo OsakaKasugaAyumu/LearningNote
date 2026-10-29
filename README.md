@@ -25,6 +25,10 @@ Zephyr :
         - Zephyr Thread(2026/10/22)
         - ISR and Thread Communication(2026/10/21)
         - Thread and Thread Communication(2026/10/22)
+        - Device Tree(2026/10/29)
+        - Device Tree Banding with YAML(2026/10/29)
+        - devicetree_generated.h(2026/10/29)
+        - DT_N_<node_path>_P_<property>(2026/10/29)
 
 Memory Manager :
         -
