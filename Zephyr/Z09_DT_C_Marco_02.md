@@ -178,3 +178,37 @@ my-external-ic {
     irq-gpios = <&gpio1 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 };
 ```
+
+
+```d
+
+# 标签定位
+&serial0 {
+    current-speed = <9600>;
+};
+
+#绝对路径定位
+&{/soc/serial@40001000} {
+    current-speed = <9600>
+}
+
+
+
+
+# 删除一个属性 /delete-property/
+&serial0 {
+    /delete-property/ some-unwanted-property;
+};
+
+
+# @unit-address和reg指定的地址是0x十六进制, 不是十进制
+
+```
+```d
+
+DTS的三大依赖关系 :
+    - 父子  比如I2C传感器(子)依赖I2C控制器(父)
+    - 属性引用  phandle
+    - 中断 interrupt-parent
+
+```
